@@ -42,4 +42,12 @@ class DashboardReporting {
     public function totalRooms() : int {
        return Room::all()->count();
     }
+    
+    public function reservedRooms() : object {
+        $today = date('Y-m-d', strtotime('today'));
+        $reservedRooms = Room::whereHas('reservations', function($query) use ($today) {
+            $query->where('from_date', '=', $today);
+        })->get();
+        return $reservedRooms;
+    }
 }

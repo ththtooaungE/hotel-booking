@@ -22,12 +22,15 @@ class ReportingController extends Controller
         $end_month = date('Y-m-d h:i:s', strtotime('+1 month', strtotime($month)));
         $report = new DashboardReporting();
 
+        // dd(Reservation::whereHas('user.role',function($query) {$query->where('id',1);})->count());
+
         if(Cache::has('cache_data')){
             $data = Cache::get('cache_data');
         }
         else{
             $report = new DashboardReporting();
             $todayAvailableRooms = $report->availableRooms();
+            $todayReservedRooms = $report->reservedRooms();
             $todayAvailableRoomTypes = $report->availableRoomTypes($todayAvailableRooms);
             $totalRooms = $report->totalRooms();
 
@@ -43,12 +46,13 @@ class ReportingController extends Controller
             $data = [
                 'todayAvailableRoomTypes' =>$todayAvailableRoomTypes,
                 'todayAvailableRooms'=>$todayAvailableRooms,
+                'todayReservedRooms' =>$todayReservedRooms,
                 'monthlyPopularRoomTypes'=>$monthlyPopularRoomTypes,
                 'monthlyGuests'=>$monthlyGuests,
                 'monthlyAmount'=>$monthlyAmount,
                 'totalRooms'=>$totalRooms,
-                'adminReservedReservations'=>Reservation::where('user_id', 1)->count(),
-                'userReservedReservations'=>Reservation::where('user_id', 2)->count()
+                'adminReservedReservations'=>Reservation::withTrashed()->whereHas('user.role',function($query) {$query->where('id',1);})->count(),
+                'userReservedReservations'=>Reservation::withTrashed()->whereHas('user.role',function($query) {$query->where('id',2);})->count()
             ];
             Cache::put('cache_data',$data,now()->addMinutes(30));
         }
